@@ -23,13 +23,22 @@
 #'                      rchisq(100, 5), times=1000L)
 #' autoplot(tm)
 #' @author Ari Friedman, Olaf Mersmann
-autoplot.microbenchmark <- function(object, ...,
+autoplot.microbenchmark <- function(object, order, ...,
                                     log=TRUE,
                                     y_max=1.05 * max(object$time)) {
   if (!requireNamespace("ggplot2"))
     stop("Missing package 'ggplot2'.")
   y_min <- 0
   object$ntime <- convert_to_unit(object$time, "t")
+  if (!missing(order)) {
+    s <- summary(object)
+    if (order %in% colnames(s)) {
+      object$expr <- factor(object$expr, levels = levels(object$expr)[order(s[[order]])])
+    }
+    else {
+      warning("Cannot order results by", order, ".")
+    }
+  }
   plt <- ggplot2::ggplot(object, ggplot2::aes_string(x="expr", y="ntime"))
   plt <- plt + ggplot2::coord_cartesian(ylim=c(y_min , y_max))
   plt <- plt + ggplot2::stat_ydensity()
